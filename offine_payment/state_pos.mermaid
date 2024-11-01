@@ -1,0 +1,23 @@
+stateDiagram-v2
+    [*] --> IdleState
+
+    IdleState --> ReqState : REQ_DATA / send_req(data)
+    state ReqState {
+        entry/startTimer(3)
+        exit/clearReqTimer()
+    }
+    
+    ReqState --> WaitRespState: [req.svc_code != '0xDB'] RECV_ACK
+    ReqState --> IdleState: [req.svc_code == '0xDB'] RECV_ACK
+    ReqState --> IdleState: TIME_OUT
+    ReqState --> IdleState: USER_CANCEL / send_eot()
+    ReqState --> IdleState: RECV_EOT / initialize()
+    ReqState --> IdleState: RECV_NAK
+    
+    state WaitRespState {
+        entry/startTimer(90)
+        exit/clearRespTimer()
+    }
+
+    WaitRespState --> IdleState: RECV_RESP / send_ack()
+    WaitRespState --> IdleState: TIME_OUT
